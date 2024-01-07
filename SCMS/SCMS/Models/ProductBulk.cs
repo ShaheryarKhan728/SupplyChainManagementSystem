@@ -7,7 +7,9 @@ public partial class ProductBulk
 {
     public int Id { get; set; }
 
-    public int? ProductId { get; set; }
+    public int ProductId { get; set; }
+
+    public int LineItemId { get; set; }
 
     public long? Quantity { get; set; }
 
@@ -20,4 +22,6 @@ public partial class ProductBulk
     public int? ModifiedOn { get; set; }
 
     public DateTime? ModifedBy { get; set; }
+
+    public virtual Product Product { get; set; } = null!;
 }
