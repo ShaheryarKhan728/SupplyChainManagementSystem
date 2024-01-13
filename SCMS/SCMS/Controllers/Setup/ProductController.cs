@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using SCMS.DTO;
 using SCMS.Models;
+using SCMS.Requests;
 
 namespace SCMS.Controllers.Setup
 {
@@ -16,17 +17,55 @@ namespace SCMS.Controllers.Setup
         }
 
         [HttpGet("getallproduct")]
-        public List<CategoryTypeDto> GetAllProduct()
+        public List<ProductDto> GetAllProduct()
         {
-            var result = (from o in _context.CategoryTypes
-                          join a in _context.CategoryTypes on o.Id equals a.CategoryTypeHeaderId into joinedData
-                          from a in joinedData.DefaultIfEmpty()
-                          select new CategoryTypeDto
+            var result = (from o in _context.Products
+                          //join a in _context.ProductAttributes on o.Id equals a.ProductId into ProductAttributes
+                          //from a in ProductAttributes.DefaultIfEmpty()
+                          //join b in _context.ProductBulks on o.Id equals b.ProductId into ProductBulks
+                          //from b in ProductBulks.DefaultIfEmpty()
+                          where o.Status == true
+                          select new ProductDto
                           {
                               Id = o.Id,
-                              CategoryTypeName = o.CategoryTypeName,
-                              CategoryTypeHeaderId = o.CategoryTypeHeaderId,
-                              CategoryTypeHeaderName = a.CategoryTypeName ?? null,
+                              ProductName = o.ProductName,
+                              ProductDescription = o.ProductDescription?? "",
+                              Warranty = o.Warranty,
+                              CategoryId = o.CategoryId,
+                              ProductAtributeId = o.ProductAtributeId,
+                              AccountId = o.AccountId,
+                              CreatedOn = o.CreatedOn,
+                              CreatedBy = o.CreatedBy,
+                              ProductAttributes = o.ProductAttributes,
+                              ProductBulks = o.ProductBulks
+                          })
+        .ToList();
+
+            return result;
+        }
+
+        [HttpGet("getproductbyid")]
+        public List<ProductDto> GetProductById(int id)
+        {
+            var result = (from o in _context.Products
+                              //join a in _context.ProductAttributes on o.Id equals a.ProductId into ProductAttributes
+                              //from a in ProductAttributes.DefaultIfEmpty()
+                              //join b in _context.ProductBulks on o.Id equals b.ProductId into ProductBulks
+                              //from b in ProductBulks.DefaultIfEmpty()
+                          where o.Status == true && o.Id == id
+                          select new ProductDto
+                          {
+                              Id = o.Id,
+                              ProductName = o.ProductName,
+                              ProductDescription = o.ProductDescription ?? "",
+                              Warranty = o.Warranty,
+                              CategoryId = o.CategoryId,
+                              ProductAtributeId = o.ProductAtributeId,
+                              AccountId = o.AccountId,
+                              CreatedOn = o.CreatedOn,
+                              CreatedBy = o.CreatedBy,
+                              ProductAttributes = o.ProductAttributes,
+                              ProductBulks = o.ProductBulks
                           })
         .ToList();
 
@@ -34,36 +73,48 @@ namespace SCMS.Controllers.Setup
         }
 
         [HttpPost("saveproduct")]
-        public SaveResponse SaveProduct(Product product)
+        public SaveResponse SaveProduct(ProductRequest productRequest)
         {
-            if (product != null)
+            if (productRequest != null)
             {
-                if (!product.ProductAttributes.IsNullOrEmpty() && !product.ProductBulks.IsNullOrEmpty())
+
+                if (!productRequest.ProductAttributes.IsNullOrEmpty() && !productRequest.ProductBulks.IsNullOrEmpty())
                 {
-                    if (product.Id == 0)
+                    if (productRequest.Id == 0)
                     {
                         //Product Save
                         int productId = (_context.Products.Max(c => (int?)c.Id) ?? 0) + 1;
-                        product.Id = productId;
+                        productRequest.Id = productId;
+                        //Product _product = product.getProductInstance(product);
+
+                        // Access the returned values
+                        var result = productRequest.getProductInstance(productRequest);
+
+                        Product product = result.Item1;
+                        ICollection<ProductAttribute> productAttributes = result.Item2;
+                        ICollection<ProductBulk> productBulks = result.Item3;
+
+                        //productRequest.Dispose();
+
                         _context.Products.Add(product);
 
                         //Product Attribute Save
                         int productAttributesId = (_context.ProductAttributes.Max(c => (int?)c.Id) ?? 0);
-                        foreach (var attribute in product.ProductAttributes)
+                        foreach (var attribute in productAttributes)
                         {
                             attribute.ProductId = productId;
                             attribute.Id = productAttributesId + 1;
                         }
-                        _context.ProductAttributes.AddRange(product.ProductAttributes);
+                        _context.ProductAttributes.AddRange(productAttributes);
 
                         //Product Bulk Save
                         int productBulksId = (_context.ProductBulks.Max(c => (int?)c.Id) ?? 0);
-                        foreach (var bulk in product.ProductBulks)
+                        foreach (var bulk in productBulks)
                         {
                             bulk.ProductId = productId;
                             bulk.Id = productBulksId + 1;
                         }
-                        _context.ProductBulks.AddRange(product.ProductBulks);
+                        _context.ProductBulks.AddRange(productBulks);
 
                         _context.SaveChanges();
 
@@ -75,18 +126,18 @@ namespace SCMS.Controllers.Setup
                     }
                     else
                     {
-                        Product _product = _context.Products.Find(product.Id);
+                        Product _product = _context.Products.Find(productRequest.Id);
                         if (_product != null)
                         {
                             _context.ProductAttributes.RemoveRange(_context.ProductAttributes.Where(c => c.ProductId == _product.Id));
                             _context.ProductBulks.RemoveRange(_context.ProductBulks.Where(c => c.ProductId == _product.Id));
-                            _product.ProductName = product.ProductName;
-                            _product.ProductDescription = product.ProductDescription;
-                            _product.CategoryId = product.CategoryId;
+                            _product.ProductName = productRequest.ProductName;
+                            _product.ProductDescription = productRequest.ProductDescription;
+                            _product.CategoryId = productRequest.CategoryId;
                             //_product.SubCategoryId = product.SubCategoryId;
-                            _product.Warranty = product.Warranty;
-                            _product.ModifiedBy = product.ModifiedBy;
-                            _product.ModifiedOn = product.ModifiedOn;
+                            _product.Warranty = productRequest.Warranty;
+                            _product.ModifiedBy = productRequest.ModifiedBy;
+                            _product.ModifiedOn = productRequest.ModifiedOn;
 
                             _context.Products.Update(_product);
 
@@ -98,7 +149,7 @@ namespace SCMS.Controllers.Setup
                                     Message = "invalid product attribute"
                                 };
                             }
-                            _context.ProductAttributes.AddRange(product.ProductAttributes);
+                            _context.ProductAttributes.AddRange(productRequest.ProductAttributes);
 
                             if (_context.ProductBulks.IsNullOrEmpty())
                             {
@@ -108,7 +159,7 @@ namespace SCMS.Controllers.Setup
                                     Message = "invalid product bulk"
                                 };
                             }
-                            _context.ProductBulks.AddRange(product.ProductBulks);
+                            _context.ProductBulks.AddRange(productRequest.ProductBulks);
 
                             _context.SaveChanges();
                             return new SaveResponse
