@@ -7,17 +7,11 @@ public partial class AccountUser
 {
     public int Id { get; set; }
 
-    public string? UserId { get; set; }
+    public int AccountId { get; set; }
 
-    public string? UserName { get; set; }
-
-    public string? UserPassword { get; set; }
-
-    public int? UserAccountType { get; set; }
+    public string? Username { get; set; }
 
     public string? UserAddress { get; set; }
-
-    public string? UserEmail { get; set; }
 
     public int? UserPhone1 { get; set; }
 
@@ -36,4 +30,8 @@ public partial class AccountUser
     public int? CreatedBy { get; set; }
 
     public DateTime? CreatedOn { get; set; }
+
+    public int? Approve { get; set; }
+
+    public bool? Status { get; set; }
 }

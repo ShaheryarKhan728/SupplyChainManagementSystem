@@ -4,15 +4,9 @@
     {
         public int Id { get; set; }
 
-        public string? UserId { get; set; }
-
-        public string? UserName { get; set; }
-
-        public int? UserAccountType { get; set; }
+        public string? Username { get; set; }
 
         public string? UserAddress { get; set; }
-
-        public string? UserEmail { get; set; }
 
         public int? UserPhone1 { get; set; }
 
@@ -27,6 +21,11 @@
         public decimal? UserRating { get; set; }
 
         public decimal? UserReturnRate { get; set; }
+
+        public DateTime? CreatedOn { get; set; }
+
+        public int? Approve { get; set; }
+
         public string? UserAccountTypeName { get; set; }
     }
 }

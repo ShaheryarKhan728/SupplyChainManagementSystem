@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using SCMS.DTO;
 using SCMS.Models;
 
@@ -21,11 +22,14 @@ namespace SCMS.Controllers.Setup
             var result = (from o in _context.Accounts
                           join a in _context.AccountTypes on o.AccountType equals a.Id into joinedData
                           from a in joinedData.DefaultIfEmpty()
+                          where o.Status == true
                           select new AccountsDto
                           {
                               Id = o.Id,
                               UserId = o.UserId,
-                              Username = o.Username,
+                              UserEmail = o.UserEmail,
+                              UserPassword = o.UserPassword,
+                              CreatedOn = o.CreatedOn,
                               AccountType = o.AccountType,
                               AccountTypeName = a.AccountTypeName
                           })
@@ -59,7 +63,8 @@ namespace SCMS.Controllers.Setup
                     {
                         _account.Id = account.Id;
                         _account.UserId = account.UserId;
-                        _account.Username = account.Username;
+                        _account.UserPassword = account.UserPassword;
+                        _account.UserEmail = account.UserEmail;
                         _account.AccountType = account.AccountType;
 
                         _context.Accounts.Update(_account);
@@ -93,7 +98,8 @@ namespace SCMS.Controllers.Setup
                 Account account = _context.Accounts.Find(id);
                 if (account != null)
                 {
-                    _context.Accounts.Remove(account);
+                    account.Status = false;
+                    _context.Accounts.Update(account);
                     _context.SaveChanges();
                     return new SaveResponse
                     {
@@ -114,6 +120,39 @@ namespace SCMS.Controllers.Setup
             {
                 StatusCode = "002",
                 Message = "invalid id"
+            };
+
+        }
+
+        [HttpPost("login")]
+        public SaveResponse Login(String userId, String password)
+        {
+            if (userId.IsNullOrEmpty() && password.IsNullOrEmpty())
+            {
+                Account account = _context.Accounts.FirstOrDefault(account => account.UserId == userId && account.UserPassword == password
+                                    && account.Status == true);
+
+                if (account != null)
+                {
+                    return new SaveResponse
+                    {
+                        StatusCode = "000",
+                        Message = "login successfully"
+                    };
+                }
+                else
+                {
+                    return new SaveResponse
+                    {
+                        StatusCode = "001",
+                        Message = "login error"
+                    };
+                }
+            }
+            return new SaveResponse
+            {
+                StatusCode = "002",
+                Message = "invalid userId or password"
             };
 
         }
@@ -218,20 +257,46 @@ namespace SCMS.Controllers.Setup
 
         #region Account Users
 
-        [HttpGet("getallaccountusers")]
-        public List<AccountUsersDto> GetAllAccountUsers()
+        //[HttpGet("getallaccountusers")]
+        //public List<AccountUsersDto> GetAllAccountUsers()
+        //{
+        //    var result = (from o in _context.AccountUsers
+        //                  select new AccountUsersDto
+        //                  {
+        //                      Id = o.Id,
+        //                      UserId = o.UserId,
+        //                      UserName = o.UserName,
+        //                      UserAccountType = o.Id,
+        //                      UserAddress = o.UserAddress,
+        //                      UserEmail = o.UserEmail,
+        //                      UserPhone1 = o.UserPhone1,
+        //                      UserPhone2 = o.UserPhone2,
+        //                      UserCnic = o.UserCnic,
+        //                      UserArea = o.UserArea,
+        //                      UserCity = o.UserCity,
+        //                      UserRating = o.UserRating,
+        //                      UserReturnRate = o.UserReturnRate,
+        //                      UserAccountTypeName = a.AccountTypeName,
+        //                  })
+        //.ToList();
+
+        //    return result;
+        //}
+
+        [HttpGet("getprofilebyid")]
+        public List<AccountUsersDto> GetAccountUsersById(int id)
         {
             var result = (from o in _context.AccountUsers
-                          join a in _context.AccountTypes on o.UserAccountType equals a.Id into joinedData
-                          from a in joinedData.DefaultIfEmpty()
+                          join a in _context.Accounts on o.AccountId equals a.Id into accounts
+                          from a in accounts.DefaultIfEmpty()
+                          join b in _context.AccountTypes on o.AccountId equals b.Id into accounttype
+                          from b in accounttype.DefaultIfEmpty()
+                          where o.Id == id && o.Status == true
                           select new AccountUsersDto
                           {
                               Id = o.Id,
-                              UserId = o.UserId,
-                              UserName = o.UserName,
-                              UserAccountType = o.Id,
+                              Username = o.Username,
                               UserAddress = o.UserAddress,
-                              UserEmail = o.UserEmail,
                               UserPhone1 = o.UserPhone1,
                               UserPhone2 = o.UserPhone2,
                               UserCnic = o.UserCnic,
@@ -239,14 +304,16 @@ namespace SCMS.Controllers.Setup
                               UserCity = o.UserCity,
                               UserRating = o.UserRating,
                               UserReturnRate = o.UserReturnRate,
-                              UserAccountTypeName = a.AccountTypeName,
+                              CreatedOn = o.CreatedOn,
+                              Approve = o.Approve,
+                              UserAccountTypeName = b.AccountTypeName,
                           })
         .ToList();
 
             return result;
         }
 
-        [HttpPost("saveaccountusers")]
+        [HttpPost("saveprofile")]
         public SaveResponse SaveAccountUsers(AccountUser accountUsers)
         {
             if (accountUsers != null)
@@ -255,6 +322,7 @@ namespace SCMS.Controllers.Setup
                 {
                     int id = (_context.AccountUsers.Max(c => (int?)c.Id) ?? 0) + 1;
                     accountUsers.Id = id;
+                    accountUsers.Approve = 0;
                     _context.AccountUsers.Add(accountUsers);
                     _context.SaveChanges();
 
@@ -270,11 +338,8 @@ namespace SCMS.Controllers.Setup
                     if (_accountUsers != null)
                     {
                         _accountUsers.Id = accountUsers.Id;
-                        _accountUsers.UserId = accountUsers.UserId;
-                        _accountUsers.UserName = accountUsers.UserName;
-                        _accountUsers.UserAccountType = accountUsers.UserAccountType;
+                        _accountUsers.Username = accountUsers.Username;
                         _accountUsers.UserAddress = accountUsers.UserAddress;
-                        _accountUsers.UserEmail = accountUsers.UserEmail;
                         _accountUsers.UserPhone1 = accountUsers.UserPhone1;
                         _accountUsers.UserPhone2 = accountUsers.UserPhone2;
                         _accountUsers.UserCnic = accountUsers.UserCnic;
@@ -282,6 +347,7 @@ namespace SCMS.Controllers.Setup
                         _accountUsers.UserCity = accountUsers.UserCity;
                         _accountUsers.UserRating = accountUsers.UserRating;
                         _accountUsers.UserReturnRate = accountUsers.UserReturnRate;
+                        _accountUsers.Approve = 0;
 
                         _context.AccountUsers.Update(_accountUsers);
                         _context.SaveChanges();
@@ -306,7 +372,7 @@ namespace SCMS.Controllers.Setup
 
         }
 
-        [HttpPost("deleteaccountusers")]
+        [HttpPost("deleteprofile")]
         public SaveResponse DeleteAccountUsers(int id)
         {
             if (id > 0)
