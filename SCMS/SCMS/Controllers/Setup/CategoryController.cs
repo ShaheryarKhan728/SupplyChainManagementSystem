@@ -21,17 +21,13 @@ namespace SCMS.Controllers.Setup
             var result = (from o in _context.Categories
                           join subcategory in _context.Categories on o.Id equals subcategory.CategoryHeaderId into subcategories
                           from subcategory in subcategories.DefaultIfEmpty()
-                          join subcategorytype in _context.CategoryTypes on o.CategoryTypeId equals subcategorytype.Id into subcategoryTypes
-                          from subcategorytype in subcategoryTypes.DefaultIfEmpty()
                           select new CategoryDto
                           {
                               Id = o.Id,
                               CategoryName = o.CategoryName,
                               CategoryMargin = o.CategoryMargin,
                               CategoryHeaderId = o.CategoryHeaderId,
-                              CategoryTypeId = o.CategoryTypeId,
                               CategoryHeaderName = subcategory.CategoryName,
-                              CategoryTypeName = subcategorytype.CategoryTypeName,
                               Status = o.Status
                           }).ToList();
 
@@ -44,19 +40,15 @@ namespace SCMS.Controllers.Setup
             var result = (from o in _context.Categories
                           join subcategory in _context.Categories on o.Id equals subcategory.CategoryHeaderId into subcategories
                           from subcategory in subcategories.DefaultIfEmpty()
-                          join subcategorytype in _context.CategoryTypes on o.CategoryTypeId equals subcategorytype.Id into subcategoryTypes
-                          from subcategorytype in subcategoryTypes.DefaultIfEmpty()
-                          where o.Id == id
+                          where o.Id == id && o.Status == true
                           select new CategoryDto
                           {
                               Id = o.Id,
                               CategoryName = o.CategoryName,
                               CategoryMargin = o.CategoryMargin,
                               CategoryHeaderId = o.CategoryHeaderId,
-                              CategoryTypeId = o.CategoryTypeId,
                               CategoryHeaderName = subcategory != null ? subcategory.CategoryName : null,
-                              CategoryTypeName = subcategorytype != null ? subcategorytype.CategoryTypeName : null,
-                              Status = (subcategorytype != null ? subcategorytype.Status : false)
+                              Status = (subcategory != null ? subcategory.Status : false)
                           }).ToList();
 
             return result;
@@ -88,7 +80,7 @@ namespace SCMS.Controllers.Setup
                         _category.CategoryName = category.CategoryName;
                         _category.CategoryMargin = category.CategoryMargin;
                         _category.CategoryHeaderId = category.CategoryHeaderId;
-                        _category.CategoryTypeId = category.CategoryTypeId;
+                        //_category.CategoryTypeId = category.CategoryTypeId;
                         _category.Status = category.Status;
                         _category.ModifiedBy = category.ModifiedBy;
                         _category.ModifiedOn = category.ModifiedOn;
@@ -152,108 +144,108 @@ namespace SCMS.Controllers.Setup
 
         #region Category Type
 
-        [HttpGet("getallcategorytype")]
-        public List<CategoryTypeDto> GetAllCategoryType()
-        {
-            var result = (from o in _context.CategoryTypes
-                          join a in _context.CategoryTypes on o.Id equals a.CategoryTypeHeaderId into joinedData
-                          from a in joinedData.DefaultIfEmpty()
-                          select new CategoryTypeDto
-                          {
-                              Id = o.Id,
-                              CategoryTypeName = o.CategoryTypeName,
-                              CategoryTypeHeaderId = o.CategoryTypeHeaderId,
-                              CategoryTypeHeaderName = a.CategoryTypeName ?? null,
-                          })
-        .ToList();
+        //[HttpGet("getallcategorytype")]
+        //public List<CategoryTypeDto> GetAllCategoryType()
+        //{
+        //    var result = (from o in _context.CategoryTypes
+        //                  join a in _context.CategoryTypes on o.Id equals a.CategoryTypeHeaderId into joinedData
+        //                  from a in joinedData.DefaultIfEmpty()
+        //                  select new CategoryTypeDto
+        //                  {
+        //                      Id = o.Id,
+        //                      CategoryTypeName = o.CategoryTypeName,
+        //                      CategoryTypeHeaderId = o.CategoryTypeHeaderId,
+        //                      CategoryTypeHeaderName = a.CategoryTypeName ?? null,
+        //                  })
+        //.ToList();
 
-            return result;
-        }
+        //    return result;
+        //}
 
-        [HttpPost("savecategorytype")]
-        public SaveResponse SaveCategoryType(CategoryType categoryType)
-        {
-            if (categoryType != null)
-            {
-                if (categoryType.Id == 0)
-                {
-                    int id = (_context.CategoryTypes.Max(c => (int?)c.Id) ?? 0) + 1;
-                    categoryType.Id = id;
-                    _context.CategoryTypes.Add(categoryType);
-                    _context.SaveChanges();
+        //[HttpPost("savecategorytype")]
+        //public SaveResponse SaveCategoryType(CategoryType categoryType)
+        //{
+        //    if (categoryType != null)
+        //    {
+        //        if (categoryType.Id == 0)
+        //        {
+        //            int id = (_context.CategoryTypes.Max(c => (int?)c.Id) ?? 0) + 1;
+        //            categoryType.Id = id;
+        //            _context.CategoryTypes.Add(categoryType);
+        //            _context.SaveChanges();
 
-                    return new SaveResponse
-                    {
-                        StatusCode = "000",
-                        Message = "record saved successfully"
-                    };
-                }
-                else
-                {
-                    CategoryType _categoryType = _context.CategoryTypes.Find(categoryType.Id);
-                    if (_categoryType != null)
-                    {
-                        _categoryType.Id = categoryType.Id;
-                        _categoryType.CategoryTypeName = categoryType.CategoryTypeName;
-                        _categoryType.CategoryTypeHeaderId = categoryType.CategoryTypeHeaderId;
-                        _categoryType.ModifiedBy = categoryType.ModifiedBy;
-                        _categoryType.ModifiedOn = categoryType.ModifiedOn;
+        //            return new SaveResponse
+        //            {
+        //                StatusCode = "000",
+        //                Message = "record saved successfully"
+        //            };
+        //        }
+        //        else
+        //        {
+        //            CategoryType _categoryType = _context.CategoryTypes.Find(categoryType.Id);
+        //            if (_categoryType != null)
+        //            {
+        //                _categoryType.Id = categoryType.Id;
+        //                _categoryType.CategoryTypeName = categoryType.CategoryTypeName;
+        //                _categoryType.CategoryTypeHeaderId = categoryType.CategoryTypeHeaderId;
+        //                _categoryType.ModifiedBy = categoryType.ModifiedBy;
+        //                _categoryType.ModifiedOn = categoryType.ModifiedOn;
 
-                        _context.CategoryTypes.Update(_categoryType);
-                        _context.SaveChanges();
-                        return new SaveResponse
-                        {
-                            StatusCode = "000",
-                            Message = "Record updated successfully"
-                        };
-                    }
-                    return new SaveResponse
-                    {
-                        StatusCode = "001",
-                        Message = "record not found"
-                    };
-                }
-            }
-            return new SaveResponse
-            {
-                StatusCode = "002",
-                Message = "invalid data"
-            };
+        //                _context.CategoryTypes.Update(_categoryType);
+        //                _context.SaveChanges();
+        //                return new SaveResponse
+        //                {
+        //                    StatusCode = "000",
+        //                    Message = "Record updated successfully"
+        //                };
+        //            }
+        //            return new SaveResponse
+        //            {
+        //                StatusCode = "001",
+        //                Message = "record not found"
+        //            };
+        //        }
+        //    }
+        //    return new SaveResponse
+        //    {
+        //        StatusCode = "002",
+        //        Message = "invalid data"
+        //    };
 
-        }
+        //}
 
-        [HttpPost("deletecategorytype")]
-        public SaveResponse DeleteCategoryType(int id)
-        {
-            if (id > 0)
-            {
-                CategoryType categoryType = _context.CategoryTypes.Find(id);
-                if (categoryType != null)
-                {
-                    _context.CategoryTypes.Remove(categoryType);
-                    _context.SaveChanges();
-                    return new SaveResponse
-                    {
-                        StatusCode = "000",
-                        Message = "record deleted successfully"
-                    };
-                }
-                else
-                {
-                    return new SaveResponse
-                    {
-                        StatusCode = "001",
-                        Message = "record not found"
-                    };
-                }
-            }
-            return new SaveResponse
-            {
-                StatusCode = "002",
-                Message = "invalid id"
-            };
+        //[HttpPost("deletecategorytype")]
+        //public SaveResponse DeleteCategoryType(int id)
+        //{
+        //    if (id > 0)
+        //    {
+        //        CategoryType categoryType = _context.CategoryTypes.Find(id);
+        //        if (categoryType != null)
+        //        {
+        //            _context.CategoryTypes.Remove(categoryType);
+        //            _context.SaveChanges();
+        //            return new SaveResponse
+        //            {
+        //                StatusCode = "000",
+        //                Message = "record deleted successfully"
+        //            };
+        //        }
+        //        else
+        //        {
+        //            return new SaveResponse
+        //            {
+        //                StatusCode = "001",
+        //                Message = "record not found"
+        //            };
+        //        }
+        //    }
+        //    return new SaveResponse
+        //    {
+        //        StatusCode = "002",
+        //        Message = "invalid id"
+        //    };
 
-        }
+        //}
 
         #endregion Category Type
     }

@@ -13,8 +13,6 @@ public partial class Category
 
     public int? CategoryHeaderId { get; set; }
 
-    public int? CategoryTypeId { get; set; }
-
     public bool? Status { get; set; }
 
     public int? CreatedBy { get; set; }
