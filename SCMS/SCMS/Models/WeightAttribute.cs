@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SCMS.Models;
 
-public partial class SizeAttribute
+public partial class WeightAttribute
 {
     public int Id { get; set; }
 
@@ -11,9 +11,9 @@ public partial class SizeAttribute
 
     public int LineItemId { get; set; }
 
-    public string? SizeName { get; set; }
+    public string? WeightName { get; set; }
 
-    public int? SizeUnitId { get; set; }
+    public int? WeightUnitId { get; set; }
 
     public int? CreatedBy { get; set; }
 
@@ -25,5 +25,5 @@ public partial class SizeAttribute
 
     public virtual Product Product { get; set; } = null!;
 
-    public virtual SizeUnit? SizeUnit { get; set; }
+    public virtual WeightUnit? WeightUnit { get; set; }
 }

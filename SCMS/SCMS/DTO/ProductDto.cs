@@ -27,7 +27,13 @@ namespace SCMS.DTO
         public int? ModifiedBy { get; set; }
 
         public DateTime? ModifiedOn { get; set; }
-        public virtual ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
+        //public virtual ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
+
+        public virtual ICollection<ColorAttribute> ColorAttributes { get; set; } = new List<ColorAttribute>();
+
+        public virtual ICollection<SizeAttribute> SizeAttributes { get; set; } = new List<SizeAttribute>();
+
+        public virtual ICollection<WeightAttribute> WeightAttributes { get; set; } = new List<WeightAttribute>();
 
         public virtual ICollection<ProductBulk> ProductBulks { get; set; } = new List<ProductBulk>();
     }

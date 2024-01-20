@@ -24,7 +24,7 @@ namespace SCMS.Controllers.Setup
                           //from a in ProductAttributes.DefaultIfEmpty()
                           //join b in _context.ProductBulks on o.Id equals b.ProductId into ProductBulks
                           //from b in ProductBulks.DefaultIfEmpty()
-                          where o.Status == true
+                          where o.Status == true && o.Approve == 1
                           select new ProductDto
                           {
                               Id = o.Id,
@@ -36,7 +36,9 @@ namespace SCMS.Controllers.Setup
                               AccountId = o.AccountId,
                               CreatedOn = o.CreatedOn,
                               CreatedBy = o.CreatedBy,
-                              ProductAttributes = o.ProductAttributes,
+                              ColorAttributes = o.ColorAttributes,
+                              SizeAttributes = o.SizeAttributes,
+                              WeightAttributes = o.WeightAttributes,
                               ProductBulks = o.ProductBulks
                           })
         .ToList();
@@ -52,7 +54,7 @@ namespace SCMS.Controllers.Setup
                               //from a in ProductAttributes.DefaultIfEmpty()
                               //join b in _context.ProductBulks on o.Id equals b.ProductId into ProductBulks
                               //from b in ProductBulks.DefaultIfEmpty()
-                          where o.Status == true && o.Id == id
+                          where o.Status == true && o.Id == id && o.Approve == 1
                           select new ProductDto
                           {
                               Id = o.Id,
@@ -64,7 +66,9 @@ namespace SCMS.Controllers.Setup
                               AccountId = o.AccountId,
                               CreatedOn = o.CreatedOn,
                               CreatedBy = o.CreatedBy,
-                              ProductAttributes = o.ProductAttributes,
+                              ColorAttributes = o.ColorAttributes,
+                              SizeAttributes = o.SizeAttributes,
+                              WeightAttributes = o.WeightAttributes,
                               ProductBulks = o.ProductBulks
                           })
         .ToList();
@@ -78,34 +82,65 @@ namespace SCMS.Controllers.Setup
             if (productRequest != null)
             {
 
-                if (!productRequest.ProductAttributes.IsNullOrEmpty() && !productRequest.ProductBulks.IsNullOrEmpty())
+                if (!productRequest.ColorAttributes.IsNullOrEmpty() && !productRequest.ProductBulks.IsNullOrEmpty() && !productRequest.SizeAttributes.IsNullOrEmpty() && !productRequest.WeightAttributes.IsNullOrEmpty())
                 {
                     if (productRequest.Id == 0)
                     {
                         //Product Save
                         int productId = (_context.Products.Max(c => (int?)c.Id) ?? 0) + 1;
                         productRequest.Id = productId;
+                        productRequest.Approve = 0;
                         //Product _product = product.getProductInstance(product);
 
                         // Access the returned values
                         var result = productRequest.getProductInstance(productRequest);
 
                         Product product = result.Item1;
-                        ICollection<ProductAttribute> productAttributes = result.Item2;
-                        ICollection<ProductBulk> productBulks = result.Item3;
+                        //ICollection<ProductAttribute> productAttributes = result.Item2;
+                        ICollection<ColorAttribute> colorAttributes = result.Item2;
+                        ICollection<WeightAttribute> weightAttributes = result.Item3;
+                        ICollection<SizeAttribute> sizeAttributes = result.Item4;
+                        ICollection<ProductBulk> productBulks = result.Item5;
 
                         //productRequest.Dispose();
 
                         _context.Products.Add(product);
 
-                        //Product Attribute Save
-                        int productAttributesId = (_context.ProductAttributes.Max(c => (int?)c.Id) ?? 0);
-                        foreach (var attribute in productAttributes)
+                        ////Product Attribute Save
+                        //int productAttributesId = (_context.ProductAttributes.Max(c => (int?)c.Id) ?? 0);
+                        //foreach (var attribute in productAttributes)
+                        //{
+                        //    attribute.ProductId = productId;
+                        //    attribute.Id = productAttributesId + 1;
+                        //}
+                        //_context.ProductAttributes.AddRange(productAttributes);
+
+                        //Color Attribute Save
+                        int colorAttributesId = (_context.ColorAttributes.Max(c => (int?)c.Id) ?? 0);
+                        foreach (var color in colorAttributes)
                         {
-                            attribute.ProductId = productId;
-                            attribute.Id = productAttributesId + 1;
+                            color.ProductId = productId;
+                            color.Id = colorAttributesId + 1;
                         }
-                        _context.ProductAttributes.AddRange(productAttributes);
+                        _context.ColorAttributes.AddRange(colorAttributes);
+
+                        //Size Attribute Save
+                        int sizeAttributesId = (_context.SizeAttributes.Max(c => (int?)c.Id) ?? 0);
+                        foreach (var size in sizeAttributes)
+                        {
+                            size.ProductId = productId;
+                            size.Id = sizeAttributesId + 1;
+                        }
+                        _context.SizeAttributes.AddRange(sizeAttributes);
+
+                        //Weight Attribute Save
+                        int weightAttributesId = (_context.WeightAttributes.Max(c => (int?)c.Id) ?? 0);
+                        foreach (var weight in weightAttributes)
+                        {
+                            weight.ProductId = productId;
+                            weight.Id = weightAttributesId + 1;
+                        }
+                        _context.WeightAttributes.AddRange(weightAttributes);
 
                         //Product Bulk Save
                         int productBulksId = (_context.ProductBulks.Max(c => (int?)c.Id) ?? 0);
@@ -138,18 +173,39 @@ namespace SCMS.Controllers.Setup
                             _product.Warranty = productRequest.Warranty;
                             _product.ModifiedBy = productRequest.ModifiedBy;
                             _product.ModifiedOn = productRequest.ModifiedOn;
+                            _product.Approve = 0;
 
                             _context.Products.Update(_product);
 
-                            if (_context.ProductAttributes.IsNullOrEmpty())
+                            if (_context.ColorAttributes.IsNullOrEmpty())
                             {
                                 return new SaveResponse
                                 {
                                     StatusCode = "002",
-                                    Message = "invalid product attribute"
+                                    Message = "invalid product colors"
                                 };
                             }
-                            _context.ProductAttributes.AddRange(productRequest.ProductAttributes);
+                            _context.ColorAttributes.AddRange(productRequest.ColorAttributes);
+
+                            if (_context.SizeAttributes.IsNullOrEmpty())
+                            {
+                                return new SaveResponse
+                                {
+                                    StatusCode = "002",
+                                    Message = "invalid product sizes"
+                                };
+                            }
+                            _context.SizeAttributes.AddRange(productRequest.SizeAttributes);
+
+                            if (_context.WeightAttributes.IsNullOrEmpty())
+                            {
+                                return new SaveResponse
+                                {
+                                    StatusCode = "002",
+                                    Message = "invalid product weights"
+                                };
+                            }
+                            _context.WeightAttributes.AddRange(productRequest.WeightAttributes);
 
                             if (_context.ProductBulks.IsNullOrEmpty())
                             {
@@ -197,15 +253,18 @@ namespace SCMS.Controllers.Setup
                 Product product = _context.Products.Find(id);
                 if (product != null)
                 {
-                    if (product.ProductAttributes.IsNullOrEmpty() || product.ProductBulks.IsNullOrEmpty())
+                    if (product.ColorAttributes.IsNullOrEmpty() || product.ProductBulks.IsNullOrEmpty() || product.SizeAttributes.IsNullOrEmpty() || product.WeightAttributes.IsNullOrEmpty())
                     {
                         return new SaveResponse
                         {
                             StatusCode = "002",
-                            Message = "invalid product attribute or product bulk"
+                            Message = "invalid product attributes or product bulk"
                         };
                     }
-                    _context.ProductAttributes.RemoveRange(_context.ProductAttributes.Where(c => c.ProductId == product.Id));
+                    //_context.ProductAttributes.RemoveRange(_context.ProductAttributes.Where(c => c.ProductId == product.Id));
+                    _context.ColorAttributes.RemoveRange(_context.ColorAttributes.Where(c => c.ProductId == product.Id));
+                    _context.SizeAttributes.RemoveRange(_context.SizeAttributes.Where(c => c.ProductId == product.Id));
+                    _context.WeightAttributes.RemoveRange(_context.WeightAttributes.Where(c => c.ProductId == product.Id));
                     _context.ProductBulks.RemoveRange(_context.ProductBulks.Where(c => c.ProductId == product.Id));
                     _context.Products.Remove(product);
                     _context.SaveChanges();
@@ -230,6 +289,36 @@ namespace SCMS.Controllers.Setup
                 Message = "invalid id"
             };
 
+        }
+
+        [HttpGet("getproductbyseller")]
+        public List<ProductDto> GetProductBySeller(int id)
+        {
+            var result = (from o in _context.Products
+                              //join a in _context.ProductAttributes on o.Id equals a.ProductId into ProductAttributes
+                              //from a in ProductAttributes.DefaultIfEmpty()
+                              //join b in _context.ProductBulks on o.Id equals b.ProductId into ProductBulks
+                              //from b in ProductBulks.DefaultIfEmpty()
+                          where o.Status == true && o.AccountId == id && o.Approve == 1
+                          select new ProductDto
+                          {
+                              Id = o.Id,
+                              ProductName = o.ProductName,
+                              ProductDescription = o.ProductDescription ?? "",
+                              Warranty = o.Warranty,
+                              CategoryId = o.CategoryId,
+                              ProductAtributeId = o.ProductAtributeId,
+                              AccountId = o.AccountId,
+                              CreatedOn = o.CreatedOn,
+                              CreatedBy = o.CreatedBy,
+                              ColorAttributes = o.ColorAttributes,
+                              SizeAttributes = o.SizeAttributes,
+                              WeightAttributes = o.WeightAttributes,
+                              ProductBulks = o.ProductBulks
+                          })
+            .ToList();
+
+            return result;
         }
     }
 }

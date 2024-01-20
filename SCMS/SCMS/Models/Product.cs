@@ -21,6 +21,8 @@ public partial class Product
 
     public int? AccountId { get; set; }
 
+    public int? Approve { get; set; }
+
     public int? CreatedBy { get; set; }
 
     public DateTime? CreatedOn { get; set; }
@@ -29,7 +31,13 @@ public partial class Product
 
     public DateTime? ModifiedOn { get; set; }
 
+    public virtual ICollection<ColorAttribute> ColorAttributes { get; } = new List<ColorAttribute>();
+
     public virtual ICollection<ProductAttribute> ProductAttributes { get; } = new List<ProductAttribute>();
 
     public virtual ICollection<ProductBulk> ProductBulks { get; } = new List<ProductBulk>();
+
+    public virtual ICollection<SizeAttribute> SizeAttributes { get; } = new List<SizeAttribute>();
+
+    public virtual ICollection<WeightAttribute> WeightAttributes { get; } = new List<WeightAttribute>();
 }

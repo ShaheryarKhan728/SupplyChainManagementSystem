@@ -28,7 +28,15 @@ namespace SCMS.Requests
 
         public DateTime? ModifiedOn { get; set; }
 
-        public virtual ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
+        public int? Approve { get; set; }
+
+        //public virtual ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
+
+        public virtual ICollection<ColorAttribute> ColorAttributes { get; set; } = new List<ColorAttribute>();
+
+        public virtual ICollection<SizeAttribute> SizeAttributes { get; set; } = new List<SizeAttribute>();
+
+        public virtual ICollection<WeightAttribute> WeightAttributes { get; set; } = new List<WeightAttribute>();
 
         public virtual ICollection<ProductBulk> ProductBulks { get; set; } = new List<ProductBulk>();
 
@@ -61,7 +69,7 @@ namespace SCMS.Requests
             Dispose(false);
         }
 
-        public (Product, ICollection<ProductAttribute>, ICollection<ProductBulk>) getProductInstance(ProductRequest productRequest) {
+        public (Product, ICollection<ColorAttribute>, ICollection<WeightAttribute>, ICollection<SizeAttribute>, ICollection<ProductBulk>) getProductInstance(ProductRequest productRequest) {
             Product product = new Product() { 
                 AccountId = productRequest.AccountId,
                 ProductName = productRequest.ProductName,
@@ -76,17 +84,27 @@ namespace SCMS.Requests
                 ProductAtributeId = productRequest.ProductAtributeId,
                 Warranty = productRequest.Warranty
             };
-            ICollection<ProductAttribute> ProductAttributes = productRequest.ProductAttributes;
+            ICollection<ColorAttribute> colorAttributes = productRequest.ColorAttributes;
+            ICollection<SizeAttribute> sizeAttributes = productRequest.SizeAttributes;
+            ICollection<WeightAttribute> weightAttributes = productRequest.WeightAttributes;
             ICollection<ProductBulk> ProductBulks = productRequest.ProductBulks;
-            foreach (var attribute in ProductAttributes)
+            foreach (var attribute in colorAttributes)
             {
                 attribute.Product = null;
+            }
+            foreach (var size in sizeAttributes)
+            {
+                size.Product = null;
+            }
+            foreach (var weight in weightAttributes)
+            {
+                weight.Product = null;
             }
             foreach (var bulk in ProductBulks)
             {
                 bulk.Product = null;
             }
-            return (product, ProductAttributes, ProductBulks);
+            return (product, colorAttributes, weightAttributes, sizeAttributes, ProductBulks);
         }
     }
 }
