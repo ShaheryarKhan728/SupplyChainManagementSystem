@@ -17,6 +17,8 @@ public partial class Product
 
     public string? Warranty { get; set; }
 
+    public int? MinOrderValue { get; set; }
+
     public int? ProductAtributeId { get; set; }
 
     public int? AccountId { get; set; }

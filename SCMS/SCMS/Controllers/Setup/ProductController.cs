@@ -31,6 +31,7 @@ namespace SCMS.Controllers.Setup
                               ProductName = o.ProductName,
                               ProductDescription = o.ProductDescription?? "",
                               Warranty = o.Warranty,
+                              MinOrderValue = o.MinOrderValue,
                               CategoryId = o.CategoryId,
                               ProductAtributeId = o.ProductAtributeId,
                               AccountId = o.AccountId,
@@ -61,6 +62,7 @@ namespace SCMS.Controllers.Setup
                               ProductName = o.ProductName,
                               ProductDescription = o.ProductDescription ?? "",
                               Warranty = o.Warranty,
+                              MinOrderValue = o.MinOrderValue,
                               CategoryId = o.CategoryId,
                               ProductAtributeId = o.ProductAtributeId,
                               AccountId = o.AccountId,
@@ -171,6 +173,7 @@ namespace SCMS.Controllers.Setup
                             _product.CategoryId = productRequest.CategoryId;
                             //_product.SubCategoryId = product.SubCategoryId;
                             _product.Warranty = productRequest.Warranty;
+                            _product.MinOrderValue = productRequest.MinOrderValue;
                             _product.ModifiedBy = productRequest.ModifiedBy;
                             _product.ModifiedOn = productRequest.ModifiedOn;
                             _product.Approve = 0;
@@ -307,6 +310,7 @@ namespace SCMS.Controllers.Setup
                               ProductDescription = o.ProductDescription ?? "",
                               Warranty = o.Warranty,
                               CategoryId = o.CategoryId,
+                              MinOrderValue = o.MinOrderValue,
                               ProductAtributeId = o.ProductAtributeId,
                               AccountId = o.AccountId,
                               CreatedOn = o.CreatedOn,
