@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SCMS.Controllers.Helper;
 using SCMS.DTO;
 using SCMS.Models;
 using SCMS.Requests;
@@ -158,7 +159,8 @@ namespace SCMS.Controllers.Setup
                         return new SaveResponse
                         {
                             StatusCode = "000",
-                            Message = "record saved successfully"
+                            Message = "record saved successfully",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     else
@@ -185,7 +187,8 @@ namespace SCMS.Controllers.Setup
                                 return new SaveResponse
                                 {
                                     StatusCode = "002",
-                                    Message = "invalid product colors"
+                                    Message = "invalid product colors",
+                                    Session = clsSession.GetLogin(HttpContext.Session),
                                 };
                             }
                             _context.ColorAttributes.AddRange(productRequest.ColorAttributes);
@@ -195,7 +198,8 @@ namespace SCMS.Controllers.Setup
                                 return new SaveResponse
                                 {
                                     StatusCode = "002",
-                                    Message = "invalid product sizes"
+                                    Message = "invalid product sizes",
+                                    Session = clsSession.GetLogin(HttpContext.Session),
                                 };
                             }
                             _context.SizeAttributes.AddRange(productRequest.SizeAttributes);
@@ -205,7 +209,8 @@ namespace SCMS.Controllers.Setup
                                 return new SaveResponse
                                 {
                                     StatusCode = "002",
-                                    Message = "invalid product weights"
+                                    Message = "invalid product weights",
+                                    Session = clsSession.GetLogin(HttpContext.Session),
                                 };
                             }
                             _context.WeightAttributes.AddRange(productRequest.WeightAttributes);
@@ -215,7 +220,8 @@ namespace SCMS.Controllers.Setup
                                 return new SaveResponse
                                 {
                                     StatusCode = "002",
-                                    Message = "invalid product bulk"
+                                    Message = "invalid product bulk",
+                                    Session = clsSession.GetLogin(HttpContext.Session),
                                 };
                             }
                             _context.ProductBulks.AddRange(productRequest.ProductBulks);
@@ -224,26 +230,30 @@ namespace SCMS.Controllers.Setup
                             return new SaveResponse
                             {
                                 StatusCode = "000",
-                                Message = "Record updated successfully"
+                                Message = "Record updated successfully",
+                                Session = clsSession.GetLogin(HttpContext.Session),
                             };
                         }
                         return new SaveResponse
                         {
                             StatusCode = "001",
-                            Message = "record not found"
+                            Message = "record not found",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                 }
                 return new SaveResponse
                 {
                     StatusCode = "002",
-                    Message = "invalid product attribute or product bulk"
+                    Message = "invalid product attribute or product bulk",
+                    Session = clsSession.GetLogin(HttpContext.Session),
                 };
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid data"
+                Message = "invalid data",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -261,7 +271,8 @@ namespace SCMS.Controllers.Setup
                         return new SaveResponse
                         {
                             StatusCode = "002",
-                            Message = "invalid product attributes or product bulk"
+                            Message = "invalid product attributes or product bulk",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     //_context.ProductAttributes.RemoveRange(_context.ProductAttributes.Where(c => c.ProductId == product.Id));
@@ -274,7 +285,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record deleted successfully"
+                        Message = "record deleted successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -282,14 +294,16 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid id"
+                Message = "invalid id",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }

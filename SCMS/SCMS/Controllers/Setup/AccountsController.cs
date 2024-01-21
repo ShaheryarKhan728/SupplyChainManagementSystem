@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using SCMS.Controllers.Helper;
 using SCMS.DTO;
 using SCMS.Models;
+using System.Security.Claims;
 
 namespace SCMS.Controllers.Setup
 {
@@ -9,6 +14,7 @@ namespace SCMS.Controllers.Setup
     [Route("setup")]
     public class AccountsController : ControllerBase
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
         ScmsContext _context;
         public AccountsController(ScmsContext context)
         {
@@ -53,7 +59,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record saved successfully"
+                        Message = "record saved successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -72,20 +79,23 @@ namespace SCMS.Controllers.Setup
                         return new SaveResponse
                         {
                             StatusCode = "000",
-                            Message = "Record updated successfully"
+                            Message = "Record updated successfully",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid data"
+                Message = "invalid data",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -104,7 +114,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record deleted successfully"
+                        Message = "record deleted successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -112,14 +123,16 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid id"
+                Message = "invalid id",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -129,15 +142,56 @@ namespace SCMS.Controllers.Setup
         {
             if (userId.IsNullOrEmpty() && password.IsNullOrEmpty())
             {
-                Account account = _context.Accounts.FirstOrDefault(account => account.UserId == userId && account.UserPassword == password
-                                    && account.Status == true);
+                clsSession.ClearLogin(HttpContext.Session);
 
-                if (account != null)
+                bool isExist = _context.Accounts.Any(account => account.UserId == userId && account.UserPassword == password
+                                    && account.Status == true);
+                if (!isExist)
                 {
                     return new SaveResponse
                     {
+                        StatusCode = "002",
+                        Message = "invalid userId or password",
+                        Session = clsSession.GetLogin(HttpContext.Session),
+                    };
+                }
+
+                LoginResponse account = (from o in _context.Accounts
+                                         join a in _context.AccountUsers on o.Id equals a.AccountId into accountUsers
+                                         from a in accountUsers.DefaultIfEmpty()
+                                         select new LoginResponse
+                                         {
+                                             AccountId = o.Id,
+                                             UserId = o.UserId,
+                                             UserName = a != null ? a.Username : null,
+                                             AccountType = o.AccountType,
+                                             Approval = a != null ? a.Approve : null
+                                         }).FirstOrDefault();
+
+                clsSession.ClearLogin(HttpContext.Session);
+                if (account != null)
+                {
+                    var userClaims = new List<Claim>()
+                    {
+                        new Claim(ClaimTypes.Name, account.UserName),
+                        //new Claim(ClaimTypes.Sid, result.Roleid),
+                        //new Claim(ClaimTypes.UserId, account.UserId),
+                        //new Claim(ClaimTypes.Sid, account.Roleid.ToString())
+                    };
+
+                    var identity = new ClaimsIdentity(userClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var userPrincipal = new ClaimsPrincipal(new[] { identity });
+
+                    HttpContext.SignInAsync(userPrincipal);
+
+                    clsSession.SetLogin(HttpContext.Session, JsonConvert.SerializeObject(account));
+
+                    return new SaveResponse
+                    {
                         StatusCode = "000",
-                        Message = "login successfully"
+                        Message = "login successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -145,23 +199,39 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "login error"
+                        Message = "login error",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid userId or password"
+                Message = "invalid userId or password",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
 
-        #endregion Accounts
+        [HttpPost("logout")]
+        public SaveResponse Logout()
+        {
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            clsSession.ClearLogin(HttpContext.Session);
+            return new SaveResponse
+            {
+                StatusCode = "002",
+                Message = "invalid userId or password",
+                Session = clsSession.GetLogin(HttpContext.Session),
+            };
+        }
 
-        #region Account Type
 
-        [HttpGet("getallaccounttype")]
+            #endregion Accounts
+
+            #region Account Type
+
+            [HttpGet("getallaccounttype")]
         public List<AccountType> GetAllAccountType()
         {
             var result = (from o in _context.AccountTypes
@@ -186,7 +256,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record saved successfully"
+                        Message = "record saved successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -202,20 +273,23 @@ namespace SCMS.Controllers.Setup
                         return new SaveResponse
                         {
                             StatusCode = "000",
-                            Message = "Record updated successfully"
+                            Message = "Record updated successfully",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid data"
+                Message = "invalid data",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -233,7 +307,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record deleted successfully"
+                        Message = "record deleted successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -241,14 +316,16 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid id"
+                Message = "invalid id",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -329,7 +406,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record saved successfully"
+                        Message = "record saved successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -354,20 +432,23 @@ namespace SCMS.Controllers.Setup
                         return new SaveResponse
                         {
                             StatusCode = "000",
-                            Message = "Record updated successfully"
+                            Message = "Record updated successfully",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid data"
+                Message = "invalid data",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -385,7 +466,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record deleted successfully"
+                        Message = "record deleted successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -393,14 +475,16 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid id"
+                Message = "invalid id",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }

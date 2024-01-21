@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SCMS.Controllers.Helper;
 using SCMS.DTO;
 using SCMS.Models;
 
@@ -68,7 +69,8 @@ namespace SCMS.Controllers.Setup
 
                     return new SaveResponse
                     {
-                        Message = "record saved successfully"
+                        Message = "record saved successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -89,19 +91,22 @@ namespace SCMS.Controllers.Setup
                         _context.SaveChanges();
                         return new SaveResponse
                         {
-                            Message = "Record updated successfully"
+                            Message = "Record updated successfully",
+                            Session = clsSession.GetLogin(HttpContext.Session),
                         };
                     }
                     return new SaveResponse
                     {
-                        Message = "Unable to update record"
+                        Message = "Unable to update record",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid data"
+                Message = "invalid data",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -119,7 +124,8 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "000",
-                        Message = "record deleted successfully"
+                        Message = "record deleted successfully",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -127,14 +133,16 @@ namespace SCMS.Controllers.Setup
                     return new SaveResponse
                     {
                         StatusCode = "001",
-                        Message = "record not found"
+                        Message = "record not found",
+                        Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
             }
             return new SaveResponse
             {
                 StatusCode = "002",
-                Message = "invalid id"
+                Message = "invalid id",
+                Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
