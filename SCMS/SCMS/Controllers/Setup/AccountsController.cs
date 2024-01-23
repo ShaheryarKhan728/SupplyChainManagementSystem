@@ -60,7 +60,7 @@ namespace SCMS.Controllers.Setup
                     {
                         StatusCode = "000",
                         Message = "record saved successfully",
-                        Session = clsSession.GetLogin(HttpContext.Session),
+                        //Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
                 else
@@ -140,7 +140,7 @@ namespace SCMS.Controllers.Setup
         [HttpPost("login")]
         public SaveResponse Login(String userId, String password)
         {
-            if (userId.IsNullOrEmpty() && password.IsNullOrEmpty())
+            if (!userId.IsNullOrEmpty() && !password.IsNullOrEmpty())
             {
                 clsSession.ClearLogin(HttpContext.Session);
 
@@ -152,13 +152,14 @@ namespace SCMS.Controllers.Setup
                     {
                         StatusCode = "002",
                         Message = "invalid userId or password",
-                        Session = clsSession.GetLogin(HttpContext.Session),
+                        //Session = clsSession.GetLogin(HttpContext.Session),
                     };
                 }
 
                 LoginResponse account = (from o in _context.Accounts
                                          join a in _context.AccountUsers on o.Id equals a.AccountId into accountUsers
                                          from a in accountUsers.DefaultIfEmpty()
+                                         where o.UserId == userId && o.UserPassword == password
                                          select new LoginResponse
                                          {
                                              AccountId = o.Id,
@@ -168,12 +169,12 @@ namespace SCMS.Controllers.Setup
                                              Approval = a != null ? a.Approve : null
                                          }).FirstOrDefault();
 
-                clsSession.ClearLogin(HttpContext.Session);
+                //clsSession.ClearLogin(HttpContext.Session);
                 if (account != null)
                 {
                     var userClaims = new List<Claim>()
                     {
-                        new Claim(ClaimTypes.Name, account.UserName),
+                        new Claim(ClaimTypes.Name, account.UserId),
                         //new Claim(ClaimTypes.Sid, result.Roleid),
                         //new Claim(ClaimTypes.UserId, account.UserId),
                         //new Claim(ClaimTypes.Sid, account.Roleid.ToString())
@@ -208,7 +209,7 @@ namespace SCMS.Controllers.Setup
             {
                 StatusCode = "002",
                 Message = "invalid userId or password",
-                Session = clsSession.GetLogin(HttpContext.Session),
+                //Session = clsSession.GetLogin(HttpContext.Session),
             };
 
         }
@@ -229,7 +230,7 @@ namespace SCMS.Controllers.Setup
 
             #endregion Accounts
 
-            #region Account Type
+        #region Account Type
 
             [HttpGet("getallaccounttype")]
         public List<AccountType> GetAllAccountType()

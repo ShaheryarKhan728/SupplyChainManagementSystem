@@ -84,7 +84,9 @@ namespace SCMS.Requests
                 ModifiedOn = productRequest.ModifiedOn,
                 Id = productRequest.Id,
                 ProductAtributeId = productRequest.ProductAtributeId,
-                Warranty = productRequest.Warranty
+                Warranty = productRequest.Warranty,
+                MinOrderValue = productRequest.MinOrderValue,
+                Approve = productRequest.Approve
             };
             ICollection<ColorAttribute> colorAttributes = productRequest.ColorAttributes;
             ICollection<SizeAttribute> sizeAttributes = productRequest.SizeAttributes;

@@ -8,11 +8,11 @@
 
         public string? UserAddress { get; set; }
 
-        public int? UserPhone1 { get; set; }
+        public string? UserPhone1 { get; set; }
 
-        public int? UserPhone2 { get; set; }
+        public string? UserPhone2 { get; set; }
 
-        public int? UserCnic { get; set; }
+        public string? UserCnic { get; set; }
 
         public string? UserArea { get; set; }
 
