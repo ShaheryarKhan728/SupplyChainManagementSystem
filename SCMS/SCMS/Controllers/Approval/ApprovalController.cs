@@ -98,13 +98,40 @@ namespace SCMS.Controllers.Setup
 
         #region Order Users
 
-        //[HttpGet("getorderapproval")]
-        //public List<OrderApproval> GetOrderApproval()
-        //{
-        //    var result = (from o in _context.OrderApprovals select o).ToList();
+        [HttpGet("getorderapproval")]
+        public List<OrderApproval> GetOrderApproval()
+        {
+            var result = (from o in _context.OrderApprovals select o).ToList();
 
-        //    return result;
-        //}
+            return result;
+        }
+
+        [HttpPost("orderapproval")]
+        public SaveResponse OrderApproval(int id, int approval)
+        {
+            Order _order = _context.Orders.FirstOrDefault(order => order.Id == id);
+            if (_order != null)
+            {
+                _order.Approve = approval;
+                _context.Orders.Update(_order);
+                _context.SaveChanges();
+
+                return new SaveResponse
+                {
+                    StatusCode = "000",
+                    Message = "record updated successfully",
+                    Session = clsSession.GetLogin(HttpContext.Session),
+                };
+            }
+
+            return new SaveResponse
+            {
+                StatusCode = "001",
+                Message = "record not found",
+                Session = clsSession.GetLogin(HttpContext.Session),
+            };
+
+        }
 
         #endregion Order Users
     }
